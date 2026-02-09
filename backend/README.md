@@ -1,3 +1,4 @@
+# NDEX API (Phase 1 + Phase 2 UML)
 # NDEX API (Phase 1)
 
 ## Setup
@@ -40,6 +41,22 @@ Set the `baseUrl` and run the requests in order:
 
 1. **Register**
 2. **Login** (captures `access_token` to the environment)
+3. **Create Project** (captures `project_id`)
+4. **UML Generate**
+5. **List Projects**
+6. **Delete Project**
+
+## LLM API
+
+Set `LLM_API_URL` to an OpenAI-compatible chat completions endpoint, for example:
+
+```
+LLM_API_URL=https://api.openai.com/v1/chat/completions
+LLM_API_KEY=your-key
+LLM_MODEL=gpt-4o-mini
+```
+
+If `LLM_API_URL` is empty, the UML generator uses a simple fallback parser.
 3. **Create Project**
 4. **List Projects**
 5. **Delete Project**
@@ -54,3 +71,7 @@ Set the `baseUrl` and run the requests in order:
 - Create: `POST /projects/create`
 - List: `GET /projects/list`
 - Delete: `DELETE /projects/{project_id}`
+
+## UML
+
+- Generate: `POST /uml/generate`
