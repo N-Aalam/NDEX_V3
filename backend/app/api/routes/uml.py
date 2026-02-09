@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.crud.diagram import create_diagram, list_diagrams
+from app.crud.diagram import create_diagram
 from app.schemas.diagram import DiagramPublic, UMLGenerateRequest
 from app.services.uml import generate_uml
 

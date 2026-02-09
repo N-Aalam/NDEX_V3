@@ -25,3 +25,4 @@ def analyze(request: RepoAnalyzeRequest, db: Session = Depends(get_db), current_
         dependency_graph,
         dependency_graph.get("commits", []),
     )
+    return create_repository(db, request.project_id, str(request.repo_url), dependency_graph)
