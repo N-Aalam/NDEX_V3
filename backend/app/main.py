@@ -7,7 +7,6 @@ from app.core.config import settings
 from app.db.base import Base
 from app.db.session import engine
 from app.models import code_session, diagram, project, repository, user  # noqa: F401
-from app.models import code_session, diagram, project, user  # noqa: F401
 
 app = FastAPI(title=settings.app_name)
 
@@ -23,16 +22,15 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
-
-
-app.include_router(api_router)
-    if engine.dialect.name == "sqlite":
-        inspector = inspect(engine)
-        if "repositories" in inspector.get_table_names():
-            columns = {col["name"] for col in inspector.get_columns("repositories")}
-            if "commits" not in columns:
-                with engine.begin() as conn:
+    inspector = inspect(engine)
+    if "repositories" in inspector.get_table_names():
+        columns = {col["name"] for col in inspector.get_columns("repositories")}
+        if "commits" not in columns:
+            with engine.begin() as conn:
+                if engine.dialect.name == "sqlite":
                     conn.execute(text("ALTER TABLE repositories ADD COLUMN commits TEXT"))
+                else:
+                    conn.execute(text("ALTER TABLE repositories ADD COLUMN commits JSON"))
 
 
 app.include_router(api_router)

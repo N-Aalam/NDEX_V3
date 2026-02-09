@@ -1,11 +1,3 @@
-import { useMemo, useState } from "react";
-
-import DiagramHistory from "./components/DiagramHistory.jsx";
-import DiagramView from "./components/DiagramView.jsx";
-import GraphView from "./components/GraphView.jsx";
-import RepoTree from "./components/RepoTree.jsx";
-import CommitList from "./components/CommitList.jsx";
-import ProfileCard from "./components/ProfileCard.jsx";
 import { useEffect, useMemo, useState } from "react";
 
 import CommitList from "./components/CommitList.jsx";
@@ -26,6 +18,7 @@ const App = () => {
   const [projectName, setProjectName] = useState("");
   const [activeProject, setActiveProject] = useState("");
   const [umlText, setUmlText] = useState("");
+  const [diagramType, setDiagramType] = useState("class");
   const [umlDiagram, setUmlDiagram] = useState(null);
   const [diagramHistory, setDiagramHistory] = useState([]);
   const [codeText, setCodeText] = useState("def add(a, b):\n    return a + b\n\nresult = add(1, 2)");
@@ -89,9 +82,6 @@ const App = () => {
     }
   };
 
-  const fetchProjects = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/projects/list`, { headers });
   const fetchProjects = async (authToken = token) => {
     try {
       const authHeaders = authToken
@@ -165,7 +155,7 @@ const App = () => {
         body: JSON.stringify({
           project_id: activeProject,
           input_text: umlText,
-          diagram_type: "class"
+          diagram_type: diagramType
         })
       });
       if (!response.ok) {
@@ -194,8 +184,6 @@ const App = () => {
         throw new Error("Code analysis failed");
       }
       const json = await response.json();
-      setCodeGraph(json.execution_graph);
-      setSteps(json.execution_graph.steps || []);
       const executionGraph = json.execution_graph || {};
       setCodeGraph(executionGraph);
       setSteps(executionGraph.steps || []);
@@ -218,8 +206,6 @@ const App = () => {
         throw new Error("Repo analysis failed");
       }
       const json = await response.json();
-      setRepoTree(json.dependency_graph.entries || []);
-      setRepoCommits(json.commits || json.dependency_graph.commits || []);
       setRepoTree(json.dependency_graph?.entries || []);
       setRepoCommits(json.commits || json.dependency_graph?.commits || []);
       const executionGraph = json.execution_graph || {};
@@ -232,9 +218,6 @@ const App = () => {
 
   return (
     <main>
-      <header className="card">
-        <h1>NDEX — Neural Design Explorer</h1>
-        <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
       <nav className="topbar">
         <div>
           <p className="brand">NDEX Studio</p>
@@ -302,7 +285,6 @@ const App = () => {
         <div>
           <div className="section-title">
             <h2>Projects</h2>
-            <button className="secondary" onClick={fetchProjects}>
             <button className="secondary" onClick={() => fetchProjects(token)}>
               Refresh
             </button>
@@ -314,14 +296,6 @@ const App = () => {
               placeholder="New project name"
             />
             <button onClick={createProject}>Create Project</button>
-            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
-              <option value="">Select project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
             <div className="project-list">
               <p className="small">Project list</p>
               <ul className="list flush">
@@ -353,7 +327,7 @@ const App = () => {
             <textarea
               value={umlText}
               onChange={(event) => setUmlText(event.target.value)}
-              placeholder="Describe classes and relationships..."
+              placeholder="Describe the system... (classes, sequence, activity, use-case)"
             />
             <div className="grid two">
               <button onClick={generateUml}>Generate UML</button>
@@ -361,9 +335,14 @@ const App = () => {
                 Load History
               </button>
             </div>
+            <select value={diagramType} onChange={(event) => setDiagramType(event.target.value)}>
+              <option value="class">Class diagram</option>
+              <option value="sequence">Sequence diagram</option>
+              <option value="activity">Activity diagram</option>
+              <option value="usecase">Use-case diagram</option>
+            </select>
             <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
           </div>
-          <DiagramView diagram={umlDiagram} />
           <div className="visual-card">
             <div className="visual-header">
               <div>
@@ -372,7 +351,7 @@ const App = () => {
               </div>
               <span className="badge soft">Diagram</span>
             </div>
-            <DiagramView diagram={umlDiagram} />
+            <DiagramView diagram={umlDiagram} diagramType={diagramType} />
           </div>
         </div>
       </section>
@@ -395,7 +374,6 @@ const App = () => {
               </ul>
             </div>
           </div>
-          <GraphView graph={codeGraph} />
           <div className="visual-card">
             <div className="visual-header">
               <div>
@@ -424,7 +402,6 @@ const App = () => {
               <CommitList commits={repoCommits} />
             </div>
           </div>
-          <div>
           <div className="visual-card">
             <div className="visual-header">
               <div>
