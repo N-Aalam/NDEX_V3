@@ -173,6 +173,36 @@
       }
     },
     {
+      "name": "Code - Analyze",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/code/analyze",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "code",
+            "analyze"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"{{project_id}}\",\n  \"language\": \"python\",\n  \"code\": \"def add(a, b):\\n    return a + b\\n\\nresult = add(1, 2)\"\n}"
+        }
+      }
+    },
+    {
       "name": "Projects - List",
       "request": {
         "method": "GET",
