@@ -1,4 +1,6 @@
 # NDEX API (Phase 1 + Phase 2 UML + Phase 3 Code)
+# NDEX API (Phase 1 + Phase 2 UML)
+# NDEX API (Phase 1)
 
 ## Setup
 
@@ -45,6 +47,8 @@ Set the `baseUrl` and run the requests in order:
 5. **Code Analyze**
 6. **List Projects**
 7. **Delete Project**
+5. **List Projects**
+6. **Delete Project**
 
 ## LLM API
 
@@ -57,6 +61,9 @@ LLM_MODEL=gpt-4o-mini
 ```
 
 If `LLM_API_URL` is empty, the UML generator uses a simple fallback parser.
+3. **Create Project**
+4. **List Projects**
+5. **Delete Project**
 
 ## Auth
 
