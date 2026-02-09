@@ -23,12 +23,6 @@
             "auth",
             "register"
           ]
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/auth/register",
-          "host": ["{{baseUrl}}"],
-          "path": ["auth", "register"]
         },
         "body": {
           "mode": "raw",
@@ -68,12 +62,6 @@
             "auth",
             "login"
           ]
-          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/auth/login",
-          "host": ["{{baseUrl}}"],
-          "path": ["auth", "login"]
         },
         "body": {
           "mode": "urlencoded",
@@ -86,8 +74,6 @@
               "key": "password",
               "value": "password123"
             }
-            { "key": "username", "value": "user@example.com" },
-            { "key": "password", "value": "password123" }
           ]
         }
       }
@@ -115,13 +101,6 @@
             "projects",
             "create"
           ]
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/projects/create",
-          "host": ["{{baseUrl}}"],
-          "path": ["projects", "create"]
         },
         "body": {
           "mode": "raw",
@@ -191,12 +170,6 @@
             "projects",
             "list"
           ]
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/projects/list",
-          "host": ["{{baseUrl}}"],
-          "path": ["projects", "list"]
         }
       }
     },
@@ -219,12 +192,6 @@
             "projects",
             "{{project_id}}"
           ]
-          { "key": "Authorization", "value": "Bearer {{access_token}}" }
-        ],
-        "url": {
-          "raw": "{{baseUrl}}/projects/{{project_id}}",
-          "host": ["{{baseUrl}}"],
-          "path": ["projects", "{{project_id}}"]
         }
       }
     }
