@@ -19,6 +19,14 @@ Copy `.env.example` to `.env` and update values as needed.
 cp .env.example .env
 ```
 
+### Supabase Postgres
+
+Use the Supabase connection string in `DATABASE_URL`. Include `sslmode=require` if it is not already in your URL.
+
+```
+DATABASE_URL=postgresql://postgres:<PASSWORD>@db.<PROJECT>.supabase.co:5432/postgres?sslmode=require
+```
+
 ## Run
 
 ```bash
@@ -45,6 +53,11 @@ Set the `baseUrl` and run the requests in order:
 2. **Login** (captures `access_token` to the environment)
 3. **Create Project** (captures `project_id`)
 4. **UML Generate**
+5. **UML List**
+6. **Code Analyze**
+7. **Repo Analyze**
+8. **List Projects**
+9. **Delete Project**
 5. **Code Analyze**
 6. **Repo Analyze**
 7. **List Projects**
@@ -87,6 +100,7 @@ If you hit GitHub rate limits, set `GITHUB_TOKEN` to a personal access token.
 ## UML
 
 - Generate: `POST /uml/generate`
+- List: `GET /uml/list`
 
 ## Code
 

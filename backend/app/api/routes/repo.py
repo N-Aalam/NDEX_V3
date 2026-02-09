@@ -18,4 +18,11 @@ def analyze(request: RepoAnalyzeRequest, db: Session = Depends(get_db), current_
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to fetch repository") from exc
 
+    return create_repository(
+        db,
+        request.project_id,
+        str(request.repo_url),
+        dependency_graph,
+        dependency_graph.get("commits", []),
+    )
     return create_repository(db, request.project_id, str(request.repo_url), dependency_graph)

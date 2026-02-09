@@ -14,6 +14,7 @@ class RepositoryPublic(BaseModel):
     project_id: UUID
     repo_url: str
     dependency_graph: dict
+    commits: list[dict]
     created_at: datetime
 
     class Config:

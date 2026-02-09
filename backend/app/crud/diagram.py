@@ -14,3 +14,12 @@ def create_diagram(db: Session, project_id, diagram_type: str, input_text: str, 
     db.commit()
     db.refresh(diagram)
     return diagram
+
+
+def list_diagrams(db: Session, project_id):
+    return (
+        db.query(Diagram)
+        .filter(Diagram.project_id == project_id)
+        .order_by(Diagram.created_at.desc())
+        .all()
+    )

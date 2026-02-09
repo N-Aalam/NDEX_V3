@@ -182,6 +182,34 @@
       }
     },
     {
+      "name": "UML - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/uml/list?project_id={{project_id}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "uml",
+            "list"
+          ],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "{{project_id}}"
+            }
+          ]
+        }
+      }
+    },
+    {
       "name": "Repo - Analyze",
       "request": {
         "method": "POST",

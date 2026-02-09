@@ -195,6 +195,15 @@ button.secondary {
   color: #0f172a;
 }
 
+button.link {
+  background: transparent;
+  color: #2563eb;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

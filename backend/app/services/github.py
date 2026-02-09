@@ -36,6 +36,25 @@ def _get_default_branch(client: httpx.Client, owner: str, repo: str) -> str:
     return data.get("default_branch", "main")
 
 
+def _fetch_commits(client: httpx.Client, owner: str, repo: str) -> list[dict]:
+    response = client.get(f"https://api.github.com/repos/{owner}/{repo}/commits", params={"per_page": 10})
+    response.raise_for_status()
+    commits = []
+    for item in response.json():
+        commit = item.get("commit", {})
+        author = commit.get("author", {})
+        commits.append(
+            {
+                "sha": item.get("sha"),
+                "message": commit.get("message"),
+                "author": author.get("name"),
+                "date": author.get("date"),
+                "url": item.get("html_url"),
+            }
+        )
+    return commits
+
+
 def fetch_repo_tree(repo_url: str) -> dict:
     owner, repo = _parse_repo_url(repo_url)
     headers = _build_headers()
@@ -46,6 +65,7 @@ def fetch_repo_tree(repo_url: str) -> dict:
         response = client.get(tree_url)
         response.raise_for_status()
         tree_data = response.json()
+        commits = _fetch_commits(client, owner, repo)
 
     entries = [
         {
@@ -61,4 +81,5 @@ def fetch_repo_tree(repo_url: str) -> dict:
         "repo": f"{owner}/{repo}",
         "branch": branch,
         "entries": entries,
+        "commits": commits,
     }
