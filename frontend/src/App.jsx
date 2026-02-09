@@ -1,12 +1,8 @@
-import { useMemo, useState } from "react";
-
-import DiagramView from "./components/DiagramView.jsx";
-import GraphView from "./components/GraphView.jsx";
-import RepoTree from "./components/RepoTree.jsx";
 import { useEffect, useMemo, useState } from "react";
 
 import DiagramView from "./components/DiagramView.jsx";
 import GraphView from "./components/GraphView.jsx";
+import RepoTree from "./components/RepoTree.jsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
@@ -80,9 +76,6 @@ const App = () => {
     }
   };
 
-  const fetchProjects = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/projects/list`, { headers });
   const fetchProjects = async (authToken = token) => {
     try {
       const authHeaders = authToken
@@ -163,8 +156,9 @@ const App = () => {
         throw new Error("Code analysis failed");
       }
       const json = await response.json();
-      setCodeGraph(json.execution_graph);
-      setSteps(json.execution_graph.steps || []);
+      const executionGraph = json.execution_graph || {};
+      setCodeGraph(executionGraph);
+      setSteps(executionGraph.steps || []);
     } catch (error) {
       setError(error.message);
     }
@@ -184,7 +178,7 @@ const App = () => {
         throw new Error("Repo analysis failed");
       }
       const json = await response.json();
-      setRepoTree(json.dependency_graph.entries || []);
+      setRepoTree(json.dependency_graph?.entries || []);
       const executionGraph = json.execution_graph || {};
       setCodeGraph(executionGraph);
       setSteps(executionGraph.steps || []);
@@ -195,9 +189,6 @@ const App = () => {
 
   return (
     <main>
-      <header className="card">
-        <h1>NDEX — Neural Design Explorer</h1>
-        <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
       <nav className="topbar">
         <div>
           <p className="brand">NDEX Studio</p>
@@ -263,7 +254,7 @@ const App = () => {
         <div>
           <div className="section-title">
             <h2>Projects</h2>
-            <button className="secondary" onClick={fetchProjects}>
+            <button className="secondary" onClick={() => fetchProjects(token)}>
               Refresh
             </button>
           </div>
@@ -274,14 +265,6 @@ const App = () => {
               placeholder="New project name"
             />
             <button onClick={createProject}>Create Project</button>
-            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
-              <option value="">Select project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
             <div className="project-list">
               <p className="small">Project list</p>
               <ul className="list flush">
@@ -317,7 +300,6 @@ const App = () => {
             />
             <button onClick={generateUml}>Generate UML</button>
           </div>
-          <DiagramView diagram={umlDiagram} />
           <div className="visual-card">
             <div className="visual-header">
               <div>
@@ -349,7 +331,16 @@ const App = () => {
               </ul>
             </div>
           </div>
-          <GraphView graph={codeGraph} />
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">Execution Graph</p>
+                <p className="small">Runtime flow nodes</p>
+              </div>
+              <span className="badge soft">Analysis</span>
+            </div>
+            <GraphView graph={codeGraph} />
+          </div>
         </div>
       </section>
 
@@ -364,17 +355,15 @@ const App = () => {
             <button onClick={analyzeRepo}>Analyze Repo</button>
             <p className="small">Paste a public GitHub repository URL.</p>
           </div>
-          <div>
-            <RepoTree entries={repoTree} />
           <div className="visual-card">
             <div className="visual-header">
               <div>
-                <p className="visual-title">Execution Graph</p>
-                <p className="small">Runtime flow nodes</p>
+                <p className="visual-title">Repository Tree</p>
+                <p className="small">Dependency and file structure</p>
               </div>
-              <span className="badge soft">Analysis</span>
+              <span className="badge soft">Repo</span>
             </div>
-            <GraphView graph={codeGraph} />
+            <RepoTree entries={repoTree} />
           </div>
         </div>
       </section>

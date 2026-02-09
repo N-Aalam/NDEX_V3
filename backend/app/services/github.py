@@ -51,6 +51,7 @@ def fetch_repo_tree(repo_url: str) -> dict:
         {
             "path": item.get("path"),
             "type": item.get("type"),
+            "size": item.get("size", 0),
         }
         for item in tree_data.get("tree", [])
         if item.get("path")

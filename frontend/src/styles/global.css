@@ -299,6 +299,223 @@ svg {
   background: #fff;
 }
 
+.pack-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.pack-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pack-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pack-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #94a3b8;
+  display: inline-block;
+}
+
+.legend-dot.folder {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.pack-canvas {
+  height: 360px;
+}
+
+.pack-node {
+  stroke: rgba(15, 23, 42, 0.08);
+  stroke-width: 1;
+  transition: filter 0.2s ease;
+}
+
+.pack-node.active {
+  filter: drop-shadow(0 0 10px rgba(29, 78, 216, 0.6));
+}
+
+.pack-label {
+  fill: #0f172a;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.pack-tooltip {
+  position: fixed;
+  z-index: 40;
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 10px 12px;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.3);
+  min-width: 180px;
+  pointer-events: none;
+}
+
+.tooltip-title {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.tree-shell {
+  display: grid;
+  gap: 12px;
+}
+
+.tree-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tree-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tree-zoom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tree-viewport {
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  padding: 12px;
+  transform-origin: top left;
+  transition: transform 0.25s ease;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.tree-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.tree-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(29, 78, 216, 0.08);
+  background: #f8fafc;
+  text-align: left;
+  color: #0f172a;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.tree-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.tree-row.active {
+  background: #e0e7ff;
+  border-color: rgba(29, 78, 216, 0.3);
+}
+
+.tree-row.highlight {
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+.tree-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: #cbd5f5;
+  position: relative;
+}
+
+.tree-icon.folder {
+  background: #dbeafe;
+}
+
+.tree-icon.file {
+  background: #fee2e2;
+}
+
+.tree-name {
+  flex: 1;
+  font-size: 14px;
+}
+
+.chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid #1d4ed8;
+  border-bottom: 2px solid #1d4ed8;
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+}
+
+.chevron.open {
+  transform: rotate(45deg);
+}
+
+.tree-children {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: max-height 0.25s ease, opacity 0.25s ease, transform 0.25s ease;
+  overflow: hidden;
+  padding-left: 16px;
+  border-left: 1px dashed rgba(29, 78, 216, 0.2);
+  margin-left: 10px;
+}
+
+.tree-children.expanded {
+  max-height: 1200px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(29, 78, 216, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 78, 216, 0);
+  }
+}
+
 @media (max-width: 720px) {
   .topbar {
     flex-direction: column;

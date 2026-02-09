@@ -17,9 +17,6 @@ const GraphView = ({ graph }) => {
 
     svg.attr("viewBox", `0 0 ${width} ${height}`);
 
-    const simulation = d3
-      .forceSimulation(graph.nodes.map((node) => ({ ...node })))
-      .force("link", d3.forceLink(graph.edges || []).id((d) => d.id).distance(100))
     const nodes = graph.nodes.map((node) => ({ ...node }));
     const links = (graph.edges || [])
       .map((edge) => ({
@@ -39,7 +36,6 @@ const GraphView = ({ graph }) => {
       .append("g")
       .attr("stroke", "#94a3b8")
       .selectAll("line")
-      .data(graph.edges || [])
       .data(links)
       .enter()
       .append("line")
@@ -78,7 +74,6 @@ const GraphView = ({ graph }) => {
     return () => simulation.stop();
   }, [graph]);
 
-  return <svg ref={svgRef} role="img" aria-label="Execution graph" />;
   return <svg ref={svgRef} role="img" aria-label="Execution graph" className="diagram-canvas" />;
 };
 
