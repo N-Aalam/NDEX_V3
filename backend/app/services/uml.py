@@ -14,6 +14,19 @@ DEFAULT_DIAGRAM = {
 
 
 def _fallback_uml(input_text: str) -> dict[str, Any]:
+    class_name = "Main"
+    if input_text.strip():
+        class_name = input_text.strip().split()[0].title()
+    return {
+        "classes": [
+            {
+                "name": class_name,
+                "attributes": [],
+                "methods": [],
+            }
+        ],
+        "relationships": [],
+    }
     classes: dict[str, dict[str, Any]] = {}
     relationships: list[dict[str, str]] = []
 

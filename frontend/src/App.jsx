@@ -1,3 +1,8 @@
+import { useMemo, useState } from "react";
+
+import DiagramView from "./components/DiagramView.jsx";
+import GraphView from "./components/GraphView.jsx";
+import RepoTree from "./components/RepoTree.jsx";
 import { useEffect, useMemo, useState } from "react";
 
 import DiagramView from "./components/DiagramView.jsx";
@@ -18,6 +23,8 @@ const App = () => {
   const [codeText, setCodeText] = useState("def add(a, b):\n    return a + b\n\nresult = add(1, 2)");
   const [codeGraph, setCodeGraph] = useState(null);
   const [steps, setSteps] = useState([]);
+  const [repoUrl, setRepoUrl] = useState("https://github.com/octocat/Hello-World");
+  const [repoTree, setRepoTree] = useState([]);
   const [status, setStatus] = useState("");
 
   const headers = useMemo(() => {
@@ -73,6 +80,9 @@ const App = () => {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/projects/list`, { headers });
   const fetchProjects = async (authToken = token) => {
     try {
       const authHeaders = authToken
@@ -153,6 +163,28 @@ const App = () => {
         throw new Error("Code analysis failed");
       }
       const json = await response.json();
+      setCodeGraph(json.execution_graph);
+      setSteps(json.execution_graph.steps || []);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const analyzeRepo = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/repo/analyze`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          project_id: activeProject,
+          repo_url: repoUrl
+        })
+      });
+      if (!response.ok) {
+        throw new Error("Repo analysis failed");
+      }
+      const json = await response.json();
+      setRepoTree(json.dependency_graph.entries || []);
       const executionGraph = json.execution_graph || {};
       setCodeGraph(executionGraph);
       setSteps(executionGraph.steps || []);
@@ -163,6 +195,9 @@ const App = () => {
 
   return (
     <main>
+      <header className="card">
+        <h1>NDEX — Neural Design Explorer</h1>
+        <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
       <nav className="topbar">
         <div>
           <p className="brand">NDEX Studio</p>
@@ -239,6 +274,14 @@ const App = () => {
               placeholder="New project name"
             />
             <button onClick={createProject}>Create Project</button>
+            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
+              <option value="">Select project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
             <div className="project-list">
               <p className="small">Project list</p>
               <ul className="list flush">
@@ -274,6 +317,7 @@ const App = () => {
             />
             <button onClick={generateUml}>Generate UML</button>
           </div>
+          <DiagramView diagram={umlDiagram} />
           <div className="visual-card">
             <div className="visual-header">
               <div>
@@ -305,6 +349,23 @@ const App = () => {
               </ul>
             </div>
           </div>
+          <GraphView graph={codeGraph} />
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="section-title">
+          <h2>Repo Analyzer</h2>
+          <span className="badge">Phase 4</span>
+        </div>
+        <div className="grid two">
+          <div className="grid">
+            <input value={repoUrl} onChange={(event) => setRepoUrl(event.target.value)} />
+            <button onClick={analyzeRepo}>Analyze Repo</button>
+            <p className="small">Paste a public GitHub repository URL.</p>
+          </div>
+          <div>
+            <RepoTree entries={repoTree} />
           <div className="visual-card">
             <div className="visual-header">
               <div>

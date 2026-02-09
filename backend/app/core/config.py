@@ -15,5 +15,8 @@ class Settings(BaseSettings):
     llm_model: str = "gpt-4o-mini"
     llm_timeout_seconds: int = 30
 
+    github_token: str | None = None
+    github_timeout_seconds: int = 20
+
 
 settings = Settings()
