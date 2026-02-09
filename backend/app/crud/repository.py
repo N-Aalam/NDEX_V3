@@ -10,6 +10,7 @@ def create_repository(
     dependency_graph: dict,
     commits: list[dict],
 ) -> Repository:
+def create_repository(db: Session, project_id, repo_url: str, dependency_graph: dict) -> Repository:
     repository = Repository(
         project_id=project_id,
         repo_url=repo_url,
