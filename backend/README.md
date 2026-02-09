@@ -1,3 +1,4 @@
+# NDEX API (Phase 1 + Phase 2 UML + Phase 3 Code)
 # NDEX API (Phase 1 + Phase 2 UML)
 # NDEX API (Phase 1)
 
@@ -43,6 +44,9 @@ Set the `baseUrl` and run the requests in order:
 2. **Login** (captures `access_token` to the environment)
 3. **Create Project** (captures `project_id`)
 4. **UML Generate**
+5. **Code Analyze**
+6. **List Projects**
+7. **Delete Project**
 5. **List Projects**
 6. **Delete Project**
 
@@ -75,3 +79,7 @@ If `LLM_API_URL` is empty, the UML generator uses a simple fallback parser.
 ## UML
 
 - Generate: `POST /uml/generate`
+
+## Code
+
+- Analyze: `POST /code/analyze`
