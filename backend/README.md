@@ -1,4 +1,5 @@
 # NDEX API (Phase 1 + Phase 2 UML)
+# NDEX API (Phase 1)
 
 ## Setup
 
@@ -56,6 +57,9 @@ LLM_MODEL=gpt-4o-mini
 ```
 
 If `LLM_API_URL` is empty, the UML generator uses a simple fallback parser.
+3. **Create Project**
+4. **List Projects**
+5. **Delete Project**
 
 ## Auth
 
