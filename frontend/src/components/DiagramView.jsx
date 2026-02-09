@@ -66,6 +66,7 @@ const DiagramView = ({ diagram }) => {
   }, [diagram]);
 
   return <svg ref={svgRef} role="img" aria-label="UML diagram" />;
+  return <svg ref={svgRef} role="img" aria-label="UML diagram" className="diagram-canvas" />;
 };
 
 export default DiagramView;

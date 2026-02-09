@@ -1,4 +1,7 @@
 # NDEX API (Phase 1 + Phase 2 UML + Phase 3 Code + Phase 4 Repo)
+# NDEX API (Phase 1 + Phase 2 UML + Phase 3 Code)
+# NDEX API (Phase 1 + Phase 2 UML)
+# NDEX API (Phase 1)
 
 ## Setup
 
@@ -46,6 +49,10 @@ Set the `baseUrl` and run the requests in order:
 6. **Repo Analyze**
 7. **List Projects**
 8. **Delete Project**
+6. **List Projects**
+7. **Delete Project**
+5. **List Projects**
+6. **Delete Project**
 
 ## LLM API
 
@@ -62,6 +69,9 @@ If `LLM_API_URL` is empty, the UML generator uses a simple fallback parser.
 ## GitHub API
 
 If you hit GitHub rate limits, set `GITHUB_TOKEN` to a personal access token.
+3. **Create Project**
+4. **List Projects**
+5. **Delete Project**
 
 ## Auth
 
