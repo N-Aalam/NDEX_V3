@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import DiagramView from "./components/DiagramView.jsx";
 import GraphView from "./components/GraphView.jsx";
@@ -65,14 +65,20 @@ const App = () => {
       const json = await response.json();
       setToken(json.access_token || "");
       setStatus("Authenticated");
+      if (json.access_token) {
+        await fetchProjects(json.access_token);
+      }
     } catch (error) {
       setError(error.message);
     }
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (authToken = token) => {
     try {
-      const response = await fetch(`${API_BASE}/projects/list`, { headers });
+      const authHeaders = authToken
+        ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }
+        : headers;
+      const response = await fetch(`${API_BASE}/projects/list`, { headers: authHeaders });
       if (!response.ok) {
         throw new Error("Failed to load projects");
       }
@@ -85,6 +91,12 @@ const App = () => {
       setError(error.message);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchProjects(token);
+    }
+  }, [token]);
 
   const createProject = async () => {
     try {
@@ -141,8 +153,9 @@ const App = () => {
         throw new Error("Code analysis failed");
       }
       const json = await response.json();
-      setCodeGraph(json.execution_graph);
-      setSteps(json.execution_graph.steps || []);
+      const executionGraph = json.execution_graph || {};
+      setCodeGraph(executionGraph);
+      setSteps(executionGraph.steps || []);
     } catch (error) {
       setError(error.message);
     }
@@ -150,9 +163,36 @@ const App = () => {
 
   return (
     <main>
-      <header className="card">
+      <nav className="topbar">
+        <div>
+          <p className="brand">NDEX Studio</p>
+          <p className="small">Neural Design Explorer • Phase 4</p>
+        </div>
+        <div className="topbar-group">
+          <div className="project-switcher">
+            <span className="small">Active project</span>
+            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
+              <option value="">Select project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="profile">
+            <div className="avatar">NA</div>
+            <div>
+              <p className="profile-name">NDEX Operator</p>
+              <p className="small">admin@ndex.local</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <header className="card hero">
         <h1>NDEX — Neural Design Explorer</h1>
-        <p className="small">Phase 4 frontend: UML + Code visualization connected to the API.</p>
+        <p className="small">Model architecture, UML, and execution traces in one workspace.</p>
       </header>
 
       <section className="card grid two">
@@ -199,14 +239,22 @@ const App = () => {
               placeholder="New project name"
             />
             <button onClick={createProject}>Create Project</button>
-            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
-              <option value="">Select project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            <div className="project-list">
+              <p className="small">Project list</p>
+              <ul className="list flush">
+                {projects.map((project) => (
+                  <li key={project.id}>
+                    <button
+                      className={`pill ${activeProject === project.id ? "active" : ""}`}
+                      onClick={() => setActiveProject(project.id)}
+                    >
+                      {project.name}
+                    </button>
+                  </li>
+                ))}
+                {!projects.length && <li className="small muted">No projects yet.</li>}
+              </ul>
+            </div>
             {status && <p className="small">{status}</p>}
           </div>
         </div>
@@ -226,7 +274,16 @@ const App = () => {
             />
             <button onClick={generateUml}>Generate UML</button>
           </div>
-          <DiagramView diagram={umlDiagram} />
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">UML Output</p>
+                <p className="small">Classes and relationships</p>
+              </div>
+              <span className="badge soft">Diagram</span>
+            </div>
+            <DiagramView diagram={umlDiagram} />
+          </div>
         </div>
       </section>
 
@@ -248,7 +305,16 @@ const App = () => {
               </ul>
             </div>
           </div>
-          <GraphView graph={codeGraph} />
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">Execution Graph</p>
+                <p className="small">Runtime flow nodes</p>
+              </div>
+              <span className="badge soft">Analysis</span>
+            </div>
+            <GraphView graph={codeGraph} />
+          </div>
         </div>
       </section>
     </main>

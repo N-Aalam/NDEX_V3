@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Any
 
 import httpx
@@ -13,19 +14,95 @@ DEFAULT_DIAGRAM = {
 
 
 def _fallback_uml(input_text: str) -> dict[str, Any]:
-    class_name = "Main"
-    if input_text.strip():
-        class_name = input_text.strip().split()[0].title()
-    return {
-        "classes": [
-            {
-                "name": class_name,
-                "attributes": [],
-                "methods": [],
-            }
-        ],
-        "relationships": [],
-    }
+    classes: dict[str, dict[str, Any]] = {}
+    relationships: list[dict[str, str]] = []
+
+    def ensure_class(name: str) -> None:
+        if name not in classes:
+            classes[name] = {"name": name, "attributes": [], "methods": []}
+
+    def add_attributes(name: str, attrs: list[str]) -> None:
+        if not attrs:
+            return
+        ensure_class(name)
+        existing = set(classes[name]["attributes"])
+        for attr in attrs:
+            if attr and attr not in existing:
+                classes[name]["attributes"].append(attr)
+                existing.add(attr)
+
+    def parse_attributes(raw: str) -> list[str]:
+        raw = raw.strip().rstrip(".")
+        raw = re.sub(r"\s+and\s+", ", ", raw, flags=re.IGNORECASE)
+        parts = [item.strip() for item in raw.split(",")]
+        return [item for item in parts if item]
+
+    sentences = re.split(r"[.\n]+", input_text)
+
+    create_re = re.compile(
+        r"\bcreate\s+(?:an?\s+)?(?P<name>[A-Za-z_]\w*)\s+class(?:\s+with\s+(?P<attrs>.+))?$",
+        re.IGNORECASE,
+    )
+    rel_has_many = re.compile(
+        r"\b(?P<left>[A-Za-z_]\w*)\s+has\s+many\s+(?P<right>[A-Za-z_]\w*)\b",
+        re.IGNORECASE,
+    )
+    rel_belongs = re.compile(
+        r"\b(?P<left>[A-Za-z_]\w*)\s+belongs\s+to\s+(?P<right>[A-Za-z_]\w*)\b",
+        re.IGNORECASE,
+    )
+    rel_assigned = re.compile(
+        r"\b(?P<left>[A-Za-z_]\w*)\s+can\s+be\s+assigned\s+to\s+one\s+(?P<right>[A-Za-z_]\w*)\b",
+        re.IGNORECASE,
+    )
+
+    for sentence in (s.strip() for s in sentences):
+        if not sentence:
+            continue
+
+        match = create_re.search(sentence)
+        if match:
+            class_name = match.group("name").strip()
+            ensure_class(class_name)
+            attrs = match.group("attrs")
+            if attrs:
+                add_attributes(class_name, parse_attributes(attrs))
+            continue
+
+        match = rel_has_many.search(sentence)
+        if match:
+            left = match.group("left").strip()
+            right = match.group("right").strip()
+            ensure_class(left)
+            ensure_class(right)
+            relationships.append({"from": left, "to": right, "type": "has_many"})
+            continue
+
+        match = rel_belongs.search(sentence)
+        if match:
+            left = match.group("left").strip()
+            right = match.group("right").strip()
+            ensure_class(left)
+            ensure_class(right)
+            relationships.append({"from": left, "to": right, "type": "belongs_to"})
+            continue
+
+        match = rel_assigned.search(sentence)
+        if match:
+            left = match.group("left").strip()
+            right = match.group("right").strip()
+            ensure_class(left)
+            ensure_class(right)
+            relationships.append({"from": left, "to": right, "type": "assigned_to"})
+            continue
+
+    if not classes:
+        class_name = "Main"
+        if input_text.strip():
+            class_name = input_text.strip().split()[0].title()
+        ensure_class(class_name)
+
+    return {"classes": list(classes.values()), "relationships": relationships}
 
 
 def _parse_response(content: str) -> dict[str, Any] | None:

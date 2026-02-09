@@ -17,9 +17,18 @@ const GraphView = ({ graph }) => {
 
     svg.attr("viewBox", `0 0 ${width} ${height}`);
 
+    const nodes = graph.nodes.map((node) => ({ ...node }));
+    const links = (graph.edges || [])
+      .map((edge) => ({
+        ...edge,
+        source: edge.source ?? edge.from,
+        target: edge.target ?? edge.to
+      }))
+      .filter((edge) => edge.source && edge.target);
+
     const simulation = d3
-      .forceSimulation(graph.nodes.map((node) => ({ ...node })))
-      .force("link", d3.forceLink(graph.edges || []).id((d) => d.id).distance(100))
+      .forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id((d) => d.id).distance(100))
       .force("charge", d3.forceManyBody().strength(-220))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -27,7 +36,7 @@ const GraphView = ({ graph }) => {
       .append("g")
       .attr("stroke", "#94a3b8")
       .selectAll("line")
-      .data(graph.edges || [])
+      .data(links)
       .enter()
       .append("line")
       .attr("stroke-width", 1.5);
@@ -65,7 +74,7 @@ const GraphView = ({ graph }) => {
     return () => simulation.stop();
   }, [graph]);
 
-  return <svg ref={svgRef} role="img" aria-label="Execution graph" />;
+  return <svg ref={svgRef} role="img" aria-label="Execution graph" className="diagram-canvas" />;
 };
 
 export default GraphView;

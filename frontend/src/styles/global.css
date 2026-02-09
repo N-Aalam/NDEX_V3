@@ -1,7 +1,15 @@
 :root {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
   color: #0f172a;
-  background-color: #f8fafc;
+  background-color: #eef2ff;
+  --ink: #0f172a;
+  --muted: #5b6880;
+  --surface: #ffffff;
+  --surface-2: #f1f5ff;
+  --brand: #1d4ed8;
+  --brand-2: #0f172a;
+  --stroke: rgba(15, 23, 42, 0.08);
+  --shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
 }
 
 * {
@@ -10,17 +18,27 @@
 
 body {
   margin: 0;
+  background: radial-gradient(circle at top left, #e0e7ff, #f8fafc 45%, #eef2ff 100%);
+  color: var(--ink);
 }
 
 main {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 20px 64px;
+  padding: 24px 20px 72px;
+}
+
+h1,
+h2,
+.brand,
+.visual-title {
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: 28px;
-  margin-bottom: 8px;
+  font-size: 30px;
+  margin: 0 0 6px;
 }
 
 h2 {
@@ -29,11 +47,68 @@ h2 {
 }
 
 .card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--surface);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--stroke);
   margin-bottom: 20px;
+}
+
+.hero {
+  background: linear-gradient(135deg, #ffffff 0%, #eef2ff 50%, #dbeafe 100%);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+
+.topbar-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand {
+  font-size: 18px;
+  margin: 0;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-name {
+  font-weight: 600;
+  margin: 0;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.project-switcher {
+  display: grid;
+  gap: 6px;
+  min-width: 200px;
 }
 
 .grid {
@@ -57,22 +132,29 @@ textarea,
 select {
   width: 100%;
   padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5f5;
+  border-radius: 10px;
+  border: 1px solid rgba(29, 78, 216, 0.2);
+  background: #fff;
 }
 
 textarea {
-  min-height: 120px;
+  min-height: 130px;
   resize: vertical;
 }
 
 button {
-  background: #2563eb;
+  background: var(--brand);
   color: #fff;
   border: none;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(29, 78, 216, 0.2);
 }
 
 button.secondary {
@@ -83,10 +165,15 @@ button.secondary {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: #e2e8f0;
   font-size: 12px;
+}
+
+.badge.soft {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .section-title {
@@ -96,25 +183,85 @@ button.secondary {
   gap: 8px;
 }
 
-.divider {
-  border-top: 1px solid #e2e8f0;
-  margin: 16px 0;
-}
-
 .small {
-  color: #64748b;
+  color: var(--muted);
   font-size: 13px;
+  margin: 0;
 }
 
-svg {
-  width: 100%;
-  height: 320px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
+.muted {
+  color: var(--muted);
 }
 
 .list {
   margin: 0;
   padding-left: 18px;
+}
+
+.list.flush {
+  list-style: none;
+  padding-left: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.pill {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f1f5ff;
+  border: 1px solid rgba(29, 78, 216, 0.2);
+  color: #1e293b;
+}
+
+.pill.active {
+  background: #1d4ed8;
+  color: #fff;
+}
+
+.visual-card {
+  background: var(--surface-2);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid rgba(29, 78, 216, 0.15);
+  display: grid;
+  gap: 12px;
+}
+
+.visual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.visual-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.diagram-canvas {
+  width: 100%;
+  height: 320px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #fff;
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topbar-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .project-switcher {
+    width: 100%;
+  }
 }
