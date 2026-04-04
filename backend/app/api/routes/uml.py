@@ -8,6 +8,7 @@ from app.api.deps import get_current_user, get_db
 from app.crud.diagram import create_diagram, list_diagrams
 from app.schemas.diagram import DiagramPublic, UMLGenerateRequest
 from app.services.ai_service import generate_mermaid_uml
+from app.services.uml import generate_uml
 
 router = APIRouter(prefix="/uml", tags=["uml"])
 
@@ -23,6 +24,7 @@ def generate(request: UMLGenerateRequest, db: Session = Depends(get_db), current
         "mermaid_code": mermaid_code,
         "image_url": f"https://mermaid.ink/img/{encoded}",
     }
+    diagram_json = generate_uml(request.input_text, request.diagram_type)
     return create_diagram(
         db,
         project_id=request.project_id,
