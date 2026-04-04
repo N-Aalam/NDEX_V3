@@ -283,6 +283,10 @@ def _build_prompt(input_text: str) -> str:
     return (
         "You are a UML generator. Return ONLY valid JSON with keys: classes, relationships. "
         "Each class has name, attributes (list), methods (list). Relationships include from, to, type. "
+        f"User request: {input_text}"
+    )
+
+
 def _extract_json(content: str) -> dict[str, Any] | None:
     parsed = _parse_response(content)
     if parsed:
