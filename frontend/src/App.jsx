@@ -6,6 +6,14 @@ import GraphView from "./components/GraphView.jsx";
 import RepoTree from "./components/RepoTree.jsx";
 import CommitList from "./components/CommitList.jsx";
 import ProfileCard from "./components/ProfileCard.jsx";
+import { useEffect, useMemo, useState } from "react";
+
+import CommitList from "./components/CommitList.jsx";
+import DiagramHistory from "./components/DiagramHistory.jsx";
+import DiagramView from "./components/DiagramView.jsx";
+import GraphView from "./components/GraphView.jsx";
+import ProfileCard from "./components/ProfileCard.jsx";
+import RepoTree from "./components/RepoTree.jsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
@@ -18,6 +26,7 @@ const App = () => {
   const [projectName, setProjectName] = useState("");
   const [activeProject, setActiveProject] = useState("");
   const [umlText, setUmlText] = useState("");
+  const [diagramType, setDiagramType] = useState("class");
   const [umlDiagram, setUmlDiagram] = useState(null);
   const [diagramHistory, setDiagramHistory] = useState([]);
   const [codeText, setCodeText] = useState("def add(a, b):\n    return a + b\n\nresult = add(1, 2)");
@@ -73,6 +82,9 @@ const App = () => {
       const json = await response.json();
       setToken(json.access_token || "");
       setStatus("Authenticated");
+      if (json.access_token) {
+        await fetchProjects(json.access_token);
+      }
     } catch (error) {
       setError(error.message);
     }
@@ -81,6 +93,12 @@ const App = () => {
   const fetchProjects = async () => {
     try {
       const response = await fetch(`${API_BASE}/projects/list`, { headers });
+  const fetchProjects = async (authToken = token) => {
+    try {
+      const authHeaders = authToken
+        ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }
+        : headers;
+      const response = await fetch(`${API_BASE}/projects/list`, { headers: authHeaders });
       if (!response.ok) {
         throw new Error("Failed to load projects");
       }
@@ -93,6 +111,12 @@ const App = () => {
       setError(error.message);
     }
   };
+
+  useEffect(() => {
+    if (token) {
+      fetchProjects(token);
+    }
+  }, [token]);
 
   const createProject = async () => {
     try {
@@ -143,6 +167,7 @@ const App = () => {
           project_id: activeProject,
           input_text: umlText,
           diagram_type: "class"
+          diagram_type: diagramType
         })
       });
       if (!response.ok) {
@@ -173,6 +198,9 @@ const App = () => {
       const json = await response.json();
       setCodeGraph(json.execution_graph);
       setSteps(json.execution_graph.steps || []);
+      const executionGraph = json.execution_graph || {};
+      setCodeGraph(executionGraph);
+      setSteps(executionGraph.steps || []);
     } catch (error) {
       setError(error.message);
     }
@@ -194,6 +222,11 @@ const App = () => {
       const json = await response.json();
       setRepoTree(json.dependency_graph.entries || []);
       setRepoCommits(json.commits || json.dependency_graph.commits || []);
+      setRepoTree(json.dependency_graph?.entries || []);
+      setRepoCommits(json.commits || json.dependency_graph?.commits || []);
+      const executionGraph = json.execution_graph || {};
+      setCodeGraph(executionGraph);
+      setSteps(executionGraph.steps || []);
     } catch (error) {
       setError(error.message);
     }
@@ -204,6 +237,36 @@ const App = () => {
       <header className="card">
         <h1>NDEX — Neural Design Explorer</h1>
         <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
+      <nav className="topbar">
+        <div>
+          <p className="brand">NDEX Studio</p>
+          <p className="small">Neural Design Explorer • Phase 4</p>
+        </div>
+        <div className="topbar-group">
+          <div className="project-switcher">
+            <span className="small">Active project</span>
+            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
+              <option value="">Select project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="profile">
+            <div className="avatar">NA</div>
+            <div>
+              <p className="profile-name">NDEX Operator</p>
+              <p className="small">admin@ndex.local</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <header className="card hero">
+        <h1>NDEX — Neural Design Explorer</h1>
+        <p className="small">Model architecture, UML, and execution traces in one workspace.</p>
       </header>
 
       <ProfileCard />
@@ -242,6 +305,7 @@ const App = () => {
           <div className="section-title">
             <h2>Projects</h2>
             <button className="secondary" onClick={fetchProjects}>
+            <button className="secondary" onClick={() => fetchProjects(token)}>
               Refresh
             </button>
           </div>
@@ -260,6 +324,22 @@ const App = () => {
                 </option>
               ))}
             </select>
+            <div className="project-list">
+              <p className="small">Project list</p>
+              <ul className="list flush">
+                {projects.map((project) => (
+                  <li key={project.id}>
+                    <button
+                      className={`pill ${activeProject === project.id ? "active" : ""}`}
+                      onClick={() => setActiveProject(project.id)}
+                    >
+                      {project.name}
+                    </button>
+                  </li>
+                ))}
+                {!projects.length && <li className="small muted">No projects yet.</li>}
+              </ul>
+            </div>
             {status && <p className="small">{status}</p>}
           </div>
         </div>
@@ -276,6 +356,7 @@ const App = () => {
               value={umlText}
               onChange={(event) => setUmlText(event.target.value)}
               placeholder="Describe classes and relationships..."
+              placeholder="Describe the system... (classes, sequence, activity, use-case)"
             />
             <div className="grid two">
               <button onClick={generateUml}>Generate UML</button>
@@ -286,6 +367,24 @@ const App = () => {
             <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
           </div>
           <DiagramView diagram={umlDiagram} />
+            <select value={diagramType} onChange={(event) => setDiagramType(event.target.value)}>
+              <option value="class">Class diagram</option>
+              <option value="sequence">Sequence diagram</option>
+              <option value="activity">Activity diagram</option>
+              <option value="usecase">Use-case diagram</option>
+            </select>
+            <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
+          </div>
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">UML Output</p>
+                <p className="small">Classes and relationships</p>
+              </div>
+              <span className="badge soft">Diagram</span>
+            </div>
+            <DiagramView diagram={umlDiagram} diagramType={diagramType} />
+          </div>
         </div>
       </section>
 
@@ -308,6 +407,16 @@ const App = () => {
             </div>
           </div>
           <GraphView graph={codeGraph} />
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">Execution Graph</p>
+                <p className="small">Runtime flow nodes</p>
+              </div>
+              <span className="badge soft">Analysis</span>
+            </div>
+            <GraphView graph={codeGraph} />
+          </div>
         </div>
       </section>
 
@@ -327,6 +436,14 @@ const App = () => {
             </div>
           </div>
           <div>
+          <div className="visual-card">
+            <div className="visual-header">
+              <div>
+                <p className="visual-title">Repository Tree</p>
+                <p className="small">Dependency and file structure</p>
+              </div>
+              <span className="badge soft">Repo</span>
+            </div>
             <RepoTree entries={repoTree} />
           </div>
         </div>
