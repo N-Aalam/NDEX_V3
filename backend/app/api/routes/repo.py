@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.crud.repository import create_repository
 from app.schemas.repository import RepoAnalyzeRequest, RepositoryPublic
+from app.services.ai_service import build_repo_intelligence
 from app.services.github import GitHubRepoError, fetch_repo_tree
 
 router = APIRouter(prefix="/repo", tags=["repo"])
@@ -17,6 +18,9 @@ def analyze(request: RepoAnalyzeRequest, db: Session = Depends(get_db), current_
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to fetch repository") from exc
+
+    intelligence = build_repo_intelligence(dependency_graph)
+    dependency_graph["ai_insights"] = intelligence
 
     return create_repository(
         db,

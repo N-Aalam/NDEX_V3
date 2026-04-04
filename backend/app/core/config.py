@@ -12,6 +12,7 @@ class Settings(BaseSettings):
 
     llm_api_url: str | None = None
     llm_api_key: str | None = None
+    llm_model: str = "llama-3.1-8b-instant"
     llm_model: str = "gpt-4o-mini"
     llm_timeout_seconds: int = 30
 

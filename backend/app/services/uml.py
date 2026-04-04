@@ -13,6 +13,20 @@ DEFAULT_DIAGRAM = {
 }
 
 
+def _fallback_uml(input_text: str) -> dict[str, Any]:
+    class_name = "Main"
+    if input_text.strip():
+        class_name = input_text.strip().split()[0].title()
+    return {
+        "classes": [
+            {
+                "name": class_name,
+                "attributes": [],
+                "methods": [],
+            }
+        ],
+        "relationships": [],
+    }
 def _fallback_uml(input_text: str, diagram_type: str) -> dict[str, Any]:
     diagram_type = diagram_type.lower().strip()
     text = input_text.strip()
@@ -265,6 +279,10 @@ def _parse_response(content: str) -> dict[str, Any] | None:
     return data
 
 
+def _build_prompt(input_text: str) -> str:
+    return (
+        "You are a UML generator. Return ONLY valid JSON with keys: classes, relationships. "
+        "Each class has name, attributes (list), methods (list). Relationships include from, to, type. "
 def _extract_json(content: str) -> dict[str, Any] | None:
     parsed = _parse_response(content)
     if parsed:
@@ -409,6 +427,9 @@ def _build_prompt(input_text: str, diagram_type: str) -> str:
     )
 
 
+def generate_uml(input_text: str) -> dict[str, Any]:
+    if not settings.llm_api_url:
+        return _fallback_uml(input_text)
 def generate_uml(input_text: str, diagram_type: str = "class") -> dict[str, Any]:
     if not settings.llm_api_url:
         fallback = _fallback_uml(input_text, diagram_type)
@@ -421,12 +442,15 @@ def generate_uml(input_text: str, diagram_type: str = "class") -> dict[str, Any]
     payload = {
         "model": settings.llm_model,
         "messages": [
+            {"role": "system", "content": "You output UML as JSON."},
+            {"role": "user", "content": _build_prompt(input_text)},
             {"role": "system", "content": "You output UML as JSON only."},
             {"role": "user", "content": _build_prompt(input_text, diagram_type)},
         ],
         "temperature": 0,
     }
 
+    headers = {}
     headers = {"Accept": "application/json"}
     if settings.llm_api_key:
         headers["Authorization"] = f"Bearer {settings.llm_api_key}"
@@ -436,6 +460,7 @@ def generate_uml(input_text: str, diagram_type: str = "class") -> dict[str, Any]
             response = client.post(settings.llm_api_url, json=payload, headers=headers)
         response.raise_for_status()
     except httpx.HTTPError:
+        return _fallback_uml(input_text)
         fallback = _fallback_uml(input_text, diagram_type)
         if "mermaid" not in fallback:
             mermaid_code = _to_mermaid(fallback)
@@ -454,6 +479,10 @@ def generate_uml(input_text: str, diagram_type: str = "class") -> dict[str, Any]
             content = data.get("output")
 
     if not content:
+        return _fallback_uml(input_text)
+
+    parsed = _parse_response(content)
+    return parsed or _fallback_uml(input_text)
         fallback = _fallback_uml(input_text, diagram_type)
         if "mermaid" not in fallback:
             mermaid_code = _to_mermaid(fallback)

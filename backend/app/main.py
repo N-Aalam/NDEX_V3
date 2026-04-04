@@ -22,6 +22,9 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+
+
+app.include_router(api_router)
     inspector = inspect(engine)
     if "repositories" in inspector.get_table_names():
         columns = {col["name"] for col in inspector.get_columns("repositories")}

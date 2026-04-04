@@ -36,6 +36,19 @@ def _get_default_branch(client: httpx.Client, owner: str, repo: str) -> str:
     return data.get("default_branch", "main")
 
 
+def _get_repo_metadata(client: httpx.Client, owner: str, repo: str) -> dict:
+    response = client.get(f"https://api.github.com/repos/{owner}/{repo}")
+    response.raise_for_status()
+    data = response.json()
+    return {
+        "full_name": data.get("full_name"),
+        "size": data.get("size"),
+        "open_issues": data.get("open_issues_count"),
+        "forks": data.get("forks_count"),
+        "stargazers": data.get("stargazers_count"),
+    }
+
+
 def _fetch_commits(client: httpx.Client, owner: str, repo: str) -> list[dict]:
     response = client.get(f"https://api.github.com/repos/{owner}/{repo}/commits", params={"per_page": 10})
     response.raise_for_status()
@@ -55,17 +68,33 @@ def _fetch_commits(client: httpx.Client, owner: str, repo: str) -> list[dict]:
     return commits
 
 
+def _fetch_contributors(client: httpx.Client, owner: str, repo: str) -> list[dict]:
+    response = client.get(f"https://api.github.com/repos/{owner}/{repo}/contributors", params={"per_page": 20})
+    response.raise_for_status()
+    contributors = []
+    for item in response.json():
+        contributors.append(
+            {
+                "login": item.get("login"),
+                "contributions": item.get("contributions", 0),
+            }
+        )
+    return contributors
+
+
 def fetch_repo_tree(repo_url: str) -> dict:
     owner, repo = _parse_repo_url(repo_url)
     headers = _build_headers()
 
     with httpx.Client(headers=headers, timeout=settings.github_timeout_seconds) as client:
+        metadata = _get_repo_metadata(client, owner, repo)
         branch = _get_default_branch(client, owner, repo)
         tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1"
         response = client.get(tree_url)
         response.raise_for_status()
         tree_data = response.json()
         commits = _fetch_commits(client, owner, repo)
+        contributors = _fetch_contributors(client, owner, repo)
 
     entries = [
         {
@@ -82,4 +111,6 @@ def fetch_repo_tree(repo_url: str) -> dict:
         "branch": branch,
         "entries": entries,
         "commits": commits,
+        "contributors": contributors,
+        "metadata": metadata,
     }
