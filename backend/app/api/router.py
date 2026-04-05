@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
 from app.api.routes import auth, code, projects, repo, uml
+from app.api.routes import auth, code, projects, uml
+from app.api.routes import auth, projects, uml
+from app.api.routes import auth, projects
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
