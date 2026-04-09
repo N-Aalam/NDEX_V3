@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import inspect, text
 
 from app.api.router import api_router
 from app.core.config import settings
@@ -21,6 +22,20 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    inspector = inspect(engine)
+    if "repositories" in inspector.get_table_names():
+        columns = {col["name"] for col in inspector.get_columns("repositories")}
+        if "commits" not in columns:
+            with engine.begin() as conn:
+                if engine.dialect.name == "sqlite":
+                    conn.execute(text("ALTER TABLE repositories ADD COLUMN commits TEXT"))
+                else:
+                    conn.execute(text("ALTER TABLE repositories ADD COLUMN commits JSON"))
 
 
 app.include_router(api_router)
+
+
+@app.get("/")
+def root():
+    return {"status": "NDEX backend running"}
