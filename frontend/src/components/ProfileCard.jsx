@@ -1,27 +1,22 @@
-const ProfileCard = ({ profile }) => (
+const ProfileCard = () => (
   <div className="card">
     <div className="section-title">
       <h2>User Profile</h2>
-      <span className="badge">Enhanced</span>
+      <span className="badge">AI Layer Ready</span>
     </div>
-    {!profile ? (
-      <p className="small">No profile loaded yet.</p>
-    ) : (
-      <div className="grid two">
-        <div>
-          <strong>{profile.full_name || profile.email}</strong>
-          <div className="small">{profile.email}</div>
-          <div className="small">Theme: {profile.preferred_theme}</div>
-        </div>
-        <div>
-          <strong>Last login</strong>
-          <div className="small">
-            {profile.last_login_at ? new Date(profile.last_login_at).toLocaleString() : "No login history"}
-          </div>
-          <div className="small">Joined: {new Date(profile.created_at).toLocaleDateString()}</div>
-        </div>
+    <p className="small">
+      This panel will host AI-assisted insights, personalization, and activity stats in the next phase.
+    </p>
+    <div className="grid two">
+      <div>
+        <strong>Last login</strong>
+        <div className="small">Pending real user data</div>
       </div>
-    )}
+      <div>
+        <strong>Active projects</strong>
+        <div className="small">Connect to analytics later</div>
+      </div>
+    </div>
   </div>
 );
 

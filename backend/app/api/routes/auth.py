@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.security import create_access_token, verify_password
-from app.crud.user import create_user, get_user_by_email, mark_user_login
+from app.crud.user import create_user, get_user_by_email
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserPublic
 
@@ -24,7 +24,5 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = get_user_by_email(db, form_data.username)
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    mark_user_login(db, user)
     token = create_access_token(str(user.id))
     return Token(access_token=token)

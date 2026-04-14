@@ -1,125 +1,288 @@
-import { useEffect, useState } from "react";
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { useMemo, useState } from "react";
 
-import { getMe, login, register } from "./lib/api.js";
-import DashboardPage from "./pages/DashboardPage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx";
-import ProjectsPage from "./pages/ProjectsPage.jsx";
-import WorkspacePage from "./pages/WorkspacePage.jsx";
+import DiagramHistory from "./components/DiagramHistory.jsx";
+import DiagramView from "./components/DiagramView.jsx";
+import GraphView from "./components/GraphView.jsx";
+import RepoTree from "./components/RepoTree.jsx";
+import CommitList from "./components/CommitList.jsx";
+import ProfileCard from "./components/ProfileCard.jsx";
 
-const tokenKey = "ndex_token";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
 const App = () => {
   const [authMode, setAuthMode] = useState("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [token, setToken] = useState(localStorage.getItem(tokenKey) || "");
-  const [profile, setProfile] = useState(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [token, setToken] = useState("");
+  const [projects, setProjects] = useState([]);
+  const [projectName, setProjectName] = useState("");
   const [activeProject, setActiveProject] = useState("");
+  const [umlText, setUmlText] = useState("");
+  const [diagramType, setDiagramType] = useState("class");
+  const [umlDiagram, setUmlDiagram] = useState(null);
+  const [diagramHistory, setDiagramHistory] = useState([]);
+  const [codeText, setCodeText] = useState("def add(a, b):\n    return a + b\n\nresult = add(1, 2)");
+  const [codeGraph, setCodeGraph] = useState(null);
+  const [steps, setSteps] = useState([]);
+  const [repoUrl, setRepoUrl] = useState("https://github.com/octocat/Hello-World");
+  const [repoTree, setRepoTree] = useState([]);
+  const [repoCommits, setRepoCommits] = useState([]);
   const [status, setStatus] = useState("");
 
-  useEffect(() => {
-    if (!token) {
-      setProfile(null);
-      localStorage.removeItem(tokenKey);
-      return;
-    }
-    localStorage.setItem(tokenKey, token);
-    getMe(token)
-      .then(setProfile)
-      .catch(() => {
-        setToken("");
-        setProfile(null);
-      });
+  const headers = useMemo(() => {
+    if (!token) return { "Content-Type": "application/json" };
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    };
   }, [token]);
 
-  const onAuth = async () => {
+  const setError = (message) => {
+    setStatus(message);
+    setTimeout(() => setStatus(""), 4000);
+  };
+
+  const handleAuth = async () => {
     try {
       if (authMode === "register") {
-        await register({ email, password, full_name: fullName || null });
+        const response = await fetch(`${API_BASE}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: authEmail, password: authPassword })
+        });
+        if (!response.ok) throw new Error("Registration failed");
       }
-      const auth = await login(email, password);
-      setToken(auth.access_token || "");
+
+      const form = new URLSearchParams();
+      form.append("username", authEmail);
+      form.append("password", authPassword);
+
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form
+      });
+      if (!response.ok) throw new Error("Login failed");
+
+      const json = await response.json();
+      setToken(json.access_token || "");
       setStatus("Authenticated");
     } catch (error) {
-      setStatus(error.message);
+      setError(error.message);
+    }
+  };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/projects/list`, { headers });
+      if (!response.ok) throw new Error("Failed to load projects");
+      const json = await response.json();
+      setProjects(json);
+      if (json.length > 0 && !activeProject) setActiveProject(json[0].id);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const createProject = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/projects/create`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: projectName })
+      });
+      if (!response.ok) throw new Error("Failed to create project");
+      const json = await response.json();
+      setProjects((prev) => [json, ...prev]);
+      setProjectName("");
+      setActiveProject(json.id);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const loadDiagramHistory = async () => {
+    if (!activeProject) return setError("Select a project first");
+    try {
+      const response = await fetch(`${API_BASE}/uml/list?project_id=${activeProject}`, { headers });
+      if (!response.ok) throw new Error("Failed to load diagram history");
+      const json = await response.json();
+      setDiagramHistory(json);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const generateUml = async () => {
+    try {
+      if (!activeProject) return setError("Select a project before generating UML");
+      const response = await fetch(`${API_BASE}/uml/generate`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          project_id: activeProject,
+          input_text: umlText,
+          diagram_type: diagramType
+        })
+      });
+      if (!response.ok) throw new Error("UML generation failed");
+      const json = await response.json();
+      setUmlDiagram(json.diagram_json);
+      setDiagramHistory((prev) => [json, ...prev]);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const analyzeCode = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/code/analyze`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          project_id: activeProject,
+          language: "python",
+          code: codeText
+        })
+      });
+      if (!response.ok) throw new Error("Code analysis failed");
+      const json = await response.json();
+      const executionGraph = json.execution_graph || {};
+      setCodeGraph(executionGraph);
+      setSteps(executionGraph.steps || []);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const analyzeRepo = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/repo/analyze`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          project_id: activeProject,
+          repo_url: repoUrl
+        })
+      });
+      if (!response.ok) throw new Error("Repo analysis failed");
+      const json = await response.json();
+      setRepoTree(json.dependency_graph?.entries || []);
+      setRepoCommits(json.commits || json.dependency_graph?.commits || []);
+    } catch (error) {
+      setError(error.message);
     }
   };
 
   return (
     <main>
-      <header className="card app-header">
-        <div>
-          <h1>NDEX — Multi-Page Analysis Workspace</h1>
-          <p className="small">Dashboard, profile enhancements, project history, Supabase sync, and richer analysis.</p>
-        </div>
-        <div className="nav-row">
-          <NavLink to="/dashboard" className="nav-link">
-            Dashboard
-          </NavLink>
-          <NavLink to="/projects" className="nav-link">
-            Projects
-          </NavLink>
-          <NavLink to="/workspace" className="nav-link">
-            Workspace
-          </NavLink>
-          <NavLink to="/profile" className="nav-link">
-            Profile
-          </NavLink>
-        </div>
+      <header className="card">
+        <h1>NDEX — Neural Design Explorer</h1>
+        <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
       </header>
 
+      <ProfileCard />
+
       <section className="card grid two">
-        <div className="grid auth-card">
+        <div>
           <div className="section-title">
-            <h2>{authMode === "login" ? "Sign In" : "Create account"}</h2>
-            <span className="badge">{authMode}</span>
+            <h2>Authentication</h2>
+            <span className="badge">{authMode === "login" ? "Login" : "Register"}</span>
           </div>
-          {authMode === "register" && (
-            <input value={fullName} onChange={(event) => setFullName(event.target.value)} placeholder="Full name" />
-          )}
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" />
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-          />
-          <div className="grid two">
-            <button onClick={onAuth}>{authMode === "login" ? "Login" : "Register"}</button>
-            <button className="secondary" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
-              Switch to {authMode === "login" ? "Register" : "Login"}
-            </button>
-          </div>
-          {status && <p className="small">{status}</p>}
-        </div>
-        <div className="auth-summary">
-          {profile ? (
-            <>
-              <p className="small">Logged in as:</p>
-              <strong>{profile.full_name || profile.email}</strong>
-              <p className="small">{profile.email}</p>
-              <button className="secondary" onClick={() => setToken("")}>
-                Logout
+          <div className="grid">
+            <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="Email" type="email" />
+            <input value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Password" type="password" />
+            <div className="grid two">
+              <button onClick={handleAuth}>{authMode === "login" ? "Login" : "Register"}</button>
+              <button className="secondary" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
+                Switch to {authMode === "login" ? "Register" : "Login"}
               </button>
-            </>
-          ) : (
-            <p className="small">Authenticate to unlock dashboard, history, and analysis pages.</p>
-          )}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="section-title">
+            <h2>Projects</h2>
+            <button className="secondary" onClick={fetchProjects}>Refresh</button>
+          </div>
+          <div className="grid">
+            <input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="New project name" />
+            <button onClick={createProject}>Create Project</button>
+            <select value={activeProject} onChange={(e) => setActiveProject(e.target.value)}>
+              <option value="">Select project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+            {status && <p className="small">{status}</p>}
+          </div>
         </div>
       </section>
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage token={token} />} />
-        <Route
-          path="/projects"
-          element={<ProjectsPage token={token} activeProject={activeProject} setActiveProject={setActiveProject} />}
-        />
-        <Route path="/workspace" element={<WorkspacePage token={token} activeProject={activeProject} />} />
-        <Route path="/profile" element={<ProfilePage token={token} />} />
-      </Routes>
+      <section className="card">
+        <div className="section-title">
+          <h2>UML Generator</h2>
+          <span className="badge">Phase 2</span>
+        </div>
+        <div className="grid two">
+          <div className="grid">
+            <textarea value={umlText} onChange={(e) => setUmlText(e.target.value)} placeholder="Describe classes and relationships..." />
+            <select value={diagramType} onChange={(e) => setDiagramType(e.target.value)}>
+              <option value="class">Class diagram</option>
+              <option value="sequence">Sequence diagram</option>
+              <option value="activity">Activity diagram</option>
+              <option value="usecase">Use-case diagram</option>
+            </select>
+            <div className="grid two">
+              <button onClick={generateUml}>Generate UML</button>
+              <button className="secondary" onClick={loadDiagramHistory}>Load History</button>
+            </div>
+            <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
+          </div>
+          <DiagramView diagram={umlDiagram} />
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="section-title">
+          <h2>Code Analyzer</h2>
+          <span className="badge">Phase 3</span>
+        </div>
+        <div className="grid two">
+          <div className="grid">
+            <textarea value={codeText} onChange={(e) => setCodeText(e.target.value)} />
+            <button onClick={analyzeCode}>Analyze Code</button>
+            <div>
+              <strong>Execution steps</strong>
+              <ul className="list">
+                {steps.map((step, index) => <li key={`${step.node_id}-${index}`}>{step.description}</li>)}
+              </ul>
+            </div>
+          </div>
+          <GraphView graph={codeGraph} />
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="section-title">
+          <h2>Repo Analyzer</h2>
+          <span className="badge">Phase 4</span>
+        </div>
+        <div className="grid two">
+          <div className="grid">
+            <input value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} />
+            <button onClick={analyzeRepo}>Analyze Repo</button>
+            <p className="small">Paste a public GitHub repository URL.</p>
+            <div>
+              <strong>Recent commits</strong>
+              <CommitList commits={repoCommits} />
+            </div>
+          </div>
+          <div>
+            <RepoTree entries={repoTree} />
+          </div>
+        </div>
+      </section>
     </main>
   );
 };

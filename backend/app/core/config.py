@@ -13,20 +13,11 @@ class Settings(BaseSettings):
     llm_api_url: str | None = None
     llm_api_key: str | None = None
     llm_model: str = "llama-3.1-8b-instant"
+    llm_model: str = "gpt-4o-mini"
     llm_timeout_seconds: int = 30
 
     github_token: str | None = None
     github_timeout_seconds: int = 20
-
-    supabase_url: str | None = None
-    supabase_service_role_key: str | None = None
-    supabase_timeout_seconds: int = 10
-
-    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
-
-    @property
-    def cors_origin_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 settings = Settings()

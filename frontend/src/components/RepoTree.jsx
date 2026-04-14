@@ -14,12 +14,10 @@ const EXT_COLORS = {
 
 const buildHierarchy = (entries) => {
   const root = { name: "repo", path: "", type: "tree", children: new Map() };
-
   entries.forEach((entry) => {
-    const parts = (entry.path || "").split("/").filter(Boolean);
+    const parts = entry.path.split("/").filter(Boolean);
     let cursor = root;
     let currentPath = "";
-
     parts.forEach((part, index) => {
       currentPath = currentPath ? `${currentPath}/${part}` : part;
       if (!cursor.children.has(part)) {
@@ -75,15 +73,9 @@ const RepoTree = ({ entries }) => {
   };
 
   const updateTooltipPosition = (event) => {
-    if (!tooltipRef.current) {
-      return;
-    }
-
+    if (!tooltipRef.current) return;
     const { clientX, clientY } = event;
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
-
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
       tooltipRef.current.style.left = `${clientX + 14}px`;
       tooltipRef.current.style.top = `${clientY + 14}px`;
@@ -120,19 +112,16 @@ const RepoTree = ({ entries }) => {
 
     svg.call(zoom);
 
-    const zoomToNode = (node) => {
-      if (!node || node.x === undefined || node.y === undefined) {
+    const zoomToNode = (d) => {
+      if (!d || !d.x || !d.y) {
         return;
       }
-
-      const scale = Math.min(2.2, Math.max(0.9, width / (node.r * 2.2)));
-      const translateX = width / 2 - node.x * scale;
-      const translateY = height / 2 - node.y * scale;
-
+      const scale = Math.min(2.2, Math.max(0.9, width / (d.r * 2.2)));
+      const translate = [width / 2 - d.x * scale, height / 2 - d.y * scale];
       svg
         .transition()
         .duration(650)
-        .call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(scale));
+        .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
     };
 
     zoomNodeRef.current = zoomToNode;
@@ -150,14 +139,12 @@ const RepoTree = ({ entries }) => {
       .on("mouseenter", (_, d) => {
         const isFolder = Boolean(d.children);
         const size = d.value || 0;
-
         setHoverInfo({
           name: d.data.name,
           path: d.data.path || d.data.name,
           type: isFolder ? "folder" : "file",
           size
         });
-
         if (playing) {
           stopPlayback();
         }
@@ -165,7 +152,7 @@ const RepoTree = ({ entries }) => {
       .on("mousemove", (event) => updateTooltipPosition(event))
       .on("mouseleave", () => setHoverInfo(null));
 
-    const circles = nodes
+    const circle = nodes
       .append("circle")
       .attr("r", 0)
       .attr("class", (d) => {
@@ -183,7 +170,7 @@ const RepoTree = ({ entries }) => {
         return EXT_COLORS[ext] || EXT_COLORS.default;
       });
 
-    circles
+    circle
       .transition()
       .duration(600)
       .attr("r", (d) => d.r);
@@ -208,55 +195,40 @@ const RepoTree = ({ entries }) => {
       return undefined;
     }
 
-    d3.select(svgRef.current)
+    const svg = d3.select(svgRef.current);
+    svg
       .selectAll("circle.pack-node")
       .classed("active", (d) => d.data.path === activePath);
-
-    return undefined;
   }, [activePath, entries]);
 
   useEffect(() => {
     if (!playing || !leaves.length) {
       return undefined;
     }
-
     let index = 0;
     if (playbackRef.current) {
       clearInterval(playbackRef.current);
     }
-
     playbackRef.current = setInterval(() => {
       const path = leaves[index];
       setActivePath(path);
-
-      const targetNode = d3
-        .select(svgRef.current)
+      const svg = d3.select(svgRef.current);
+      const targetNode = svg
         .selectAll("g")
         .filter((d) => d?.data?.path === path)
         .datum();
-
       if (targetNode && zoomNodeRef.current) {
         zoomNodeRef.current(targetNode);
       }
-
       index = (index + 1) % leaves.length;
     }, 220);
 
     return () => {
       clearInterval(playbackRef.current);
-      playbackRef.current = null;
     };
   }, [playing, leaves]);
 
-  useEffect(
-    () => () => {
-      stopPlayback();
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    },
-    []
-  );
+  useEffect(() => () => stopPlayback(), []);
 
   if (!entries?.length) {
     return <p className="small">No repository data yet.</p>;
@@ -273,7 +245,6 @@ const RepoTree = ({ entries }) => {
             Stop
           </button>
         </div>
-
         <div className="pack-legend">
           {Object.entries(EXT_COLORS).map(([ext, color]) =>
             ext === "default" ? null : (
@@ -289,7 +260,6 @@ const RepoTree = ({ entries }) => {
           </span>
         </div>
       </div>
-
       {hoverInfo && (
         <div ref={tooltipRef} className="pack-tooltip">
           <p className="tooltip-title">{hoverInfo.name}</p>
@@ -299,7 +269,6 @@ const RepoTree = ({ entries }) => {
           </p>
         </div>
       )}
-
       <svg ref={svgRef} className="diagram-canvas pack-canvas" role="img" aria-label="Repo bubble pack" />
     </div>
   );

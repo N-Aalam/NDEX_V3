@@ -15,15 +15,3 @@ class ProjectPublic(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class ProjectHistoryItem(BaseModel):
-    id: UUID
-    type: str
-    created_at: datetime
-    summary: str
-
-
-class ProjectHistory(BaseModel):
-    project_id: UUID
-    items: list[ProjectHistoryItem]

@@ -1,23 +1,20 @@
-import base64
 from uuid import UUID
+import base64
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
 from app.crud.diagram import create_diagram, list_diagrams
-from app.crud.project import get_project_for_user
 from app.schemas.diagram import DiagramPublic, UMLGenerateRequest
 from app.services.ai_service import generate_mermaid_uml
+from app.services.uml import generate_uml
 
 router = APIRouter(prefix="/uml", tags=["uml"])
 
 
 @router.post("/generate", response_model=DiagramPublic)
 def generate(request: UMLGenerateRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if not get_project_for_user(db, current_user.id, request.project_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-
     result = generate_mermaid_uml(request.input_text, request.diagram_type)
     mermaid_code = result.get("mermaid_code", "")
     encoded = base64.urlsafe_b64encode(mermaid_code.encode("utf-8")).decode("utf-8")
@@ -27,6 +24,7 @@ def generate(request: UMLGenerateRequest, db: Session = Depends(get_db), current
         "mermaid_code": mermaid_code,
         "image_url": f"https://mermaid.ink/img/{encoded}",
     }
+    diagram_json = generate_uml(request.input_text, request.diagram_type)
     return create_diagram(
         db,
         project_id=request.project_id,
@@ -37,7 +35,7 @@ def generate(request: UMLGenerateRequest, db: Session = Depends(get_db), current
 
 
 @router.get("/list", response_model=list[DiagramPublic])
-def list_for_project(project_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    if not get_project_for_user(db, current_user.id, project_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+def list_for_project(
+    project_id: UUID, db: Session = Depends(get_db), current_user=Depends(get_current_user)
+):
     return list_diagrams(db, project_id)
