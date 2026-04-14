@@ -31,6 +31,11 @@ def on_startup():
                     conn.execute(text("ALTER TABLE repositories ADD COLUMN commits TEXT"))
                 else:
                     conn.execute(text("ALTER TABLE repositories ADD COLUMN commits JSON"))
+    if "users" in inspector.get_table_names():
+        columns = {col["name"] for col in inspector.get_columns("users")}
+        if "preferred_theme" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN preferred_theme VARCHAR(20)"))
 
 
 app.include_router(api_router)
