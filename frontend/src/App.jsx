@@ -6,14 +6,6 @@ import GraphView from "./components/GraphView.jsx";
 import RepoTree from "./components/RepoTree.jsx";
 import CommitList from "./components/CommitList.jsx";
 import ProfileCard from "./components/ProfileCard.jsx";
-import { useEffect, useMemo, useState } from "react";
-
-import CommitList from "./components/CommitList.jsx";
-import DiagramHistory from "./components/DiagramHistory.jsx";
-import DiagramView from "./components/DiagramView.jsx";
-import GraphView from "./components/GraphView.jsx";
-import ProfileCard from "./components/ProfileCard.jsx";
-import RepoTree from "./components/RepoTree.jsx";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
 
@@ -38,9 +30,7 @@ const App = () => {
   const [status, setStatus] = useState("");
 
   const headers = useMemo(() => {
-    if (!token) {
-      return { "Content-Type": "application/json" };
-    }
+    if (!token) return { "Content-Type": "application/json" };
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`
@@ -60,9 +50,7 @@ const App = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: authEmail, password: authPassword })
         });
-        if (!response.ok) {
-          throw new Error("Registration failed");
-        }
+        if (!response.ok) throw new Error("Registration failed");
       }
 
       const form = new URLSearchParams();
@@ -74,17 +62,11 @@ const App = () => {
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: form
       });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
+      if (!response.ok) throw new Error("Login failed");
 
       const json = await response.json();
       setToken(json.access_token || "");
       setStatus("Authenticated");
-      if (json.access_token) {
-        await fetchProjects(json.access_token);
-      }
     } catch (error) {
       setError(error.message);
     }
@@ -93,30 +75,14 @@ const App = () => {
   const fetchProjects = async () => {
     try {
       const response = await fetch(`${API_BASE}/projects/list`, { headers });
-  const fetchProjects = async (authToken = token) => {
-    try {
-      const authHeaders = authToken
-        ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }
-        : headers;
-      const response = await fetch(`${API_BASE}/projects/list`, { headers: authHeaders });
-      if (!response.ok) {
-        throw new Error("Failed to load projects");
-      }
+      if (!response.ok) throw new Error("Failed to load projects");
       const json = await response.json();
       setProjects(json);
-      if (json.length > 0 && !activeProject) {
-        setActiveProject(json[0].id);
-      }
+      if (json.length > 0 && !activeProject) setActiveProject(json[0].id);
     } catch (error) {
       setError(error.message);
     }
   };
-
-  useEffect(() => {
-    if (token) {
-      fetchProjects(token);
-    }
-  }, [token]);
 
   const createProject = async () => {
     try {
@@ -125,9 +91,7 @@ const App = () => {
         headers,
         body: JSON.stringify({ name: projectName })
       });
-      if (!response.ok) {
-        throw new Error("Failed to create project");
-      }
+      if (!response.ok) throw new Error("Failed to create project");
       const json = await response.json();
       setProjects((prev) => [json, ...prev]);
       setProjectName("");
@@ -138,15 +102,10 @@ const App = () => {
   };
 
   const loadDiagramHistory = async () => {
-    if (!activeProject) {
-      setError("Select a project first");
-      return;
-    }
+    if (!activeProject) return setError("Select a project first");
     try {
       const response = await fetch(`${API_BASE}/uml/list?project_id=${activeProject}`, { headers });
-      if (!response.ok) {
-        throw new Error("Failed to load diagram history");
-      }
+      if (!response.ok) throw new Error("Failed to load diagram history");
       const json = await response.json();
       setDiagramHistory(json);
     } catch (error) {
@@ -156,23 +115,17 @@ const App = () => {
 
   const generateUml = async () => {
     try {
-      if (!activeProject) {
-        setError("Select a project before generating UML");
-        return;
-      }
+      if (!activeProject) return setError("Select a project before generating UML");
       const response = await fetch(`${API_BASE}/uml/generate`, {
         method: "POST",
         headers,
         body: JSON.stringify({
           project_id: activeProject,
           input_text: umlText,
-          diagram_type: "class"
           diagram_type: diagramType
         })
       });
-      if (!response.ok) {
-        throw new Error("UML generation failed");
-      }
+      if (!response.ok) throw new Error("UML generation failed");
       const json = await response.json();
       setUmlDiagram(json.diagram_json);
       setDiagramHistory((prev) => [json, ...prev]);
@@ -192,12 +145,8 @@ const App = () => {
           code: codeText
         })
       });
-      if (!response.ok) {
-        throw new Error("Code analysis failed");
-      }
+      if (!response.ok) throw new Error("Code analysis failed");
       const json = await response.json();
-      setCodeGraph(json.execution_graph);
-      setSteps(json.execution_graph.steps || []);
       const executionGraph = json.execution_graph || {};
       setCodeGraph(executionGraph);
       setSteps(executionGraph.steps || []);
@@ -216,17 +165,10 @@ const App = () => {
           repo_url: repoUrl
         })
       });
-      if (!response.ok) {
-        throw new Error("Repo analysis failed");
-      }
+      if (!response.ok) throw new Error("Repo analysis failed");
       const json = await response.json();
-      setRepoTree(json.dependency_graph.entries || []);
-      setRepoCommits(json.commits || json.dependency_graph.commits || []);
       setRepoTree(json.dependency_graph?.entries || []);
       setRepoCommits(json.commits || json.dependency_graph?.commits || []);
-      const executionGraph = json.execution_graph || {};
-      setCodeGraph(executionGraph);
-      setSteps(executionGraph.steps || []);
     } catch (error) {
       setError(error.message);
     }
@@ -237,36 +179,6 @@ const App = () => {
       <header className="card">
         <h1>NDEX — Neural Design Explorer</h1>
         <p className="small">Phase 4 frontend: UML + Code + Repo visualization connected to the API.</p>
-      <nav className="topbar">
-        <div>
-          <p className="brand">NDEX Studio</p>
-          <p className="small">Neural Design Explorer • Phase 4</p>
-        </div>
-        <div className="topbar-group">
-          <div className="project-switcher">
-            <span className="small">Active project</span>
-            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
-              <option value="">Select project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="profile">
-            <div className="avatar">NA</div>
-            <div>
-              <p className="profile-name">NDEX Operator</p>
-              <p className="small">admin@ndex.local</p>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <header className="card hero">
-        <h1>NDEX — Neural Design Explorer</h1>
-        <p className="small">Model architecture, UML, and execution traces in one workspace.</p>
       </header>
 
       <ProfileCard />
@@ -278,24 +190,11 @@ const App = () => {
             <span className="badge">{authMode === "login" ? "Login" : "Register"}</span>
           </div>
           <div className="grid">
-            <input
-              value={authEmail}
-              onChange={(event) => setAuthEmail(event.target.value)}
-              placeholder="Email"
-              type="email"
-            />
-            <input
-              value={authPassword}
-              onChange={(event) => setAuthPassword(event.target.value)}
-              placeholder="Password"
-              type="password"
-            />
+            <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="Email" type="email" />
+            <input value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Password" type="password" />
             <div className="grid two">
               <button onClick={handleAuth}>{authMode === "login" ? "Login" : "Register"}</button>
-              <button
-                className="secondary"
-                onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}
-              >
+              <button className="secondary" onClick={() => setAuthMode(authMode === "login" ? "register" : "login")}>
                 Switch to {authMode === "login" ? "Register" : "Login"}
               </button>
             </div>
@@ -304,42 +203,17 @@ const App = () => {
         <div>
           <div className="section-title">
             <h2>Projects</h2>
-            <button className="secondary" onClick={fetchProjects}>
-            <button className="secondary" onClick={() => fetchProjects(token)}>
-              Refresh
-            </button>
+            <button className="secondary" onClick={fetchProjects}>Refresh</button>
           </div>
           <div className="grid">
-            <input
-              value={projectName}
-              onChange={(event) => setProjectName(event.target.value)}
-              placeholder="New project name"
-            />
+            <input value={projectName} onChange={(e) => setProjectName(e.target.value)} placeholder="New project name" />
             <button onClick={createProject}>Create Project</button>
-            <select value={activeProject} onChange={(event) => setActiveProject(event.target.value)}>
+            <select value={activeProject} onChange={(e) => setActiveProject(e.target.value)}>
               <option value="">Select project</option>
               {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
+                <option key={project.id} value={project.id}>{project.name}</option>
               ))}
             </select>
-            <div className="project-list">
-              <p className="small">Project list</p>
-              <ul className="list flush">
-                {projects.map((project) => (
-                  <li key={project.id}>
-                    <button
-                      className={`pill ${activeProject === project.id ? "active" : ""}`}
-                      onClick={() => setActiveProject(project.id)}
-                    >
-                      {project.name}
-                    </button>
-                  </li>
-                ))}
-                {!projects.length && <li className="small muted">No projects yet.</li>}
-              </ul>
-            </div>
             {status && <p className="small">{status}</p>}
           </div>
         </div>
@@ -352,39 +226,20 @@ const App = () => {
         </div>
         <div className="grid two">
           <div className="grid">
-            <textarea
-              value={umlText}
-              onChange={(event) => setUmlText(event.target.value)}
-              placeholder="Describe classes and relationships..."
-              placeholder="Describe the system... (classes, sequence, activity, use-case)"
-            />
-            <div className="grid two">
-              <button onClick={generateUml}>Generate UML</button>
-              <button className="secondary" onClick={loadDiagramHistory}>
-                Load History
-              </button>
-            </div>
-            <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
-          </div>
-          <DiagramView diagram={umlDiagram} />
-            <select value={diagramType} onChange={(event) => setDiagramType(event.target.value)}>
+            <textarea value={umlText} onChange={(e) => setUmlText(e.target.value)} placeholder="Describe classes and relationships..." />
+            <select value={diagramType} onChange={(e) => setDiagramType(e.target.value)}>
               <option value="class">Class diagram</option>
               <option value="sequence">Sequence diagram</option>
               <option value="activity">Activity diagram</option>
               <option value="usecase">Use-case diagram</option>
             </select>
+            <div className="grid two">
+              <button onClick={generateUml}>Generate UML</button>
+              <button className="secondary" onClick={loadDiagramHistory}>Load History</button>
+            </div>
             <DiagramHistory items={diagramHistory} onSelect={setUmlDiagram} />
           </div>
-          <div className="visual-card">
-            <div className="visual-header">
-              <div>
-                <p className="visual-title">UML Output</p>
-                <p className="small">Classes and relationships</p>
-              </div>
-              <span className="badge soft">Diagram</span>
-            </div>
-            <DiagramView diagram={umlDiagram} diagramType={diagramType} />
-          </div>
+          <DiagramView diagram={umlDiagram} />
         </div>
       </section>
 
@@ -395,28 +250,16 @@ const App = () => {
         </div>
         <div className="grid two">
           <div className="grid">
-            <textarea value={codeText} onChange={(event) => setCodeText(event.target.value)} />
+            <textarea value={codeText} onChange={(e) => setCodeText(e.target.value)} />
             <button onClick={analyzeCode}>Analyze Code</button>
             <div>
               <strong>Execution steps</strong>
               <ul className="list">
-                {steps.map((step, index) => (
-                  <li key={`${step.node_id}-${index}`}>{step.description}</li>
-                ))}
+                {steps.map((step, index) => <li key={`${step.node_id}-${index}`}>{step.description}</li>)}
               </ul>
             </div>
           </div>
           <GraphView graph={codeGraph} />
-          <div className="visual-card">
-            <div className="visual-header">
-              <div>
-                <p className="visual-title">Execution Graph</p>
-                <p className="small">Runtime flow nodes</p>
-              </div>
-              <span className="badge soft">Analysis</span>
-            </div>
-            <GraphView graph={codeGraph} />
-          </div>
         </div>
       </section>
 
@@ -427,7 +270,7 @@ const App = () => {
         </div>
         <div className="grid two">
           <div className="grid">
-            <input value={repoUrl} onChange={(event) => setRepoUrl(event.target.value)} />
+            <input value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} />
             <button onClick={analyzeRepo}>Analyze Repo</button>
             <p className="small">Paste a public GitHub repository URL.</p>
             <div>
@@ -436,14 +279,6 @@ const App = () => {
             </div>
           </div>
           <div>
-          <div className="visual-card">
-            <div className="visual-header">
-              <div>
-                <p className="visual-title">Repository Tree</p>
-                <p className="small">Dependency and file structure</p>
-              </div>
-              <span className="badge soft">Repo</span>
-            </div>
             <RepoTree entries={repoTree} />
           </div>
         </div>

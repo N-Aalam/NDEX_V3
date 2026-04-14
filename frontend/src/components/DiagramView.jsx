@@ -1,24 +1,9 @@
-import { useEffect, useRef } from "react";
 import { useEffect, useMemo, useRef } from "react";
 import * as d3 from "d3";
 
 const BOX_WIDTH = 160;
 const BOX_HEIGHT = 80;
 
-const DiagramView = ({ diagram }) => {
-  const svgRef = useRef(null);
-
-  useEffect(() => {
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove();
-
-    if (!diagram || !diagram.classes) {
-      return;
-    }
-
-    const classes = diagram.classes;
-    const padding = 24;
-    const columns = Math.max(1, Math.floor(720 / (BOX_WIDTH + padding)));
 const DiagramView = ({ diagram, diagramType = "class" }) => {
   const svgRef = useRef(null);
   const mermaidRef = useRef(null);
@@ -271,9 +256,6 @@ const DiagramView = ({ diagram, diagramType = "class" }) => {
         .text(methods || "no methods");
     });
   }, [diagram]);
-
-  return <svg ref={svgRef} role="img" aria-label="UML diagram" />;
-  }, [diagram, diagramType, mermaidCode]);
 
   if (mermaidCode) {
     return <div ref={mermaidRef} className="diagram-canvas" aria-label="Mermaid diagram" />;
