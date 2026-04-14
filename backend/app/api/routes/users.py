@@ -20,6 +20,9 @@ def update_me(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    if payload.preferred_theme and payload.preferred_theme not in {"light", "dark"}:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="preferred_theme must be light or dark")
+
     updated = update_user_profile(db, current_user, payload)
 
     if supabase_enabled():
